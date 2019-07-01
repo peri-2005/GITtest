@@ -1,0 +1,90 @@
+# Establish a MySQL connection
+from mysql.connector import MySQLConnection, Error
+from python_mysql_dbconfig import read_db_config
+db_config = read_db_config()
+conn = MySQLConnection(**db_config)
+import xlsxwriter
+from xlsxwriter.workbook import Workbook
+import datetime
+from datetime import datetime
+cursor = conn.cursor()
+
+#creates the workbook
+workbook = xlsxwriter.Workbook('imhere.xlsx')
+worksheet = workbook.add_worksheet()
+
+#formatting definitions
+bold    = workbook.add_format({'bold': True})
+date_format = workbook.add_format({'num_format': 'yyyy-mm-dd hh:mm:ss'})
+timeShape =  '%Y-%m-%d %H:%M:%S'
+
+
+
+#actual query
+userIn = [input('start date:'),0]
+userEnd = [input('end date:'),1]
+
+
+
+query = (
+    "SELECT sent_time, delivered_time, customer_name, id1_active, id2_active, id3_active, id1_inactive, id2_inactive, id3_inactive, location_active, location_inactive FROM table1 "
+    "WHERE sent_time BETWEEN %s AND %s"
+)
+dt_start = datetime.strptime(userIn,timeShape)
+dt_end = datetime.strptime(userEnd, timeShape)
+# Execute sql Query
+cursor.execute(query, (dt_start, dt_end))
+result = cursor.fetchall()
+
+
+#sets up the header row
+worksheet.write('A1','sent_time',bold)
+worksheet.write('B1', 'delivered_time',bold)
+worksheet.write('C1', 'customer_name',bold)
+worksheet.write('D1', 'id1_active',bold)
+worksheet.write('E1', 'id2_active',bold)
+worksheet.write('F1', 'id3_active',bold)
+worksheet.write('G1', 'id1_inactive',bold)
+worksheet.write('H1', 'id2_inactive',bold)
+worksheet.write('I1', 'id3_inactive',bold)
+worksheet.write('J1', 'location_active',bold)
+worksheet.write('K1', 'location_inactive',bold)
+worksheet.autofilter('A1:K1')
+
+
+
+print("sent_time", "delivered_time", "customer_name", "id1_active", "id2_active", "id3_active", "id1_inactive", "id2_inactive", "id3_inactive", "location_active", "location_inactive")
+for row in result:
+    print(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],row[10])
+
+# Create a For loop to iterate through each row in the XLS file, starting at row 2 to skip the headers
+for r, row in enumerate(result, start=1):  #where you want to start printing results inside workbook
+    for c, col in enumerate(row):
+        worksheet.write_datetime(r,0,row[0], date_format)
+        worksheet.write_datetime(r,1, row[1], date_format)
+        worksheet.write(r,2, row[2])
+        worksheet.write(r,3, row[3])
+        worksheet.write(r,4, row[4])
+        worksheet.write(r,5, row[5])
+        worksheet.write(r,6, row[6])
+        worksheet.write(r,7, row[7])
+        worksheet.write(r,8, row[8])
+        worksheet.write(r,9, row[9])
+        worksheet.write(r,10, row[10])
+
+
+
+
+#close out everything and save
+cursor.close()
+workbook.close()
+conn.close()
+
+#print number of rows and bye-bye message
+print ("- - - - - - - - - - - - -")
+rows = len(result)
+print ("I just imported "+ str(rows) + " rows from MySQL!")
+print ("")
+print ("Good to Go!!!")
+print ("")
+python mysql datetime
